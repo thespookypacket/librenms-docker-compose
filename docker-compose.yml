@@ -1,0 +1,193 @@
+#------------------------------------------
+# MARIADB
+# The Open Source Relational Database
+# -----------------------------------------
+services:
+  db:
+    image: mariadb:10.11
+    container_name: librenms_db
+    command:
+      - mysqld
+      - --innodb-file-per-table=1
+      - --lower-case-table-names=0
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - CHANGE-TO-DIRECTORY-YOU-WANT/data/db:/var/lib/mysql
+    environment:
+      - TZ=America/Los_Angeles
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=librenms
+      - MYSQL_USER=librenms
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    networks:
+      - internal
+    restart: unless-stopped
+#------------------------------------------
+# REDIS
+# The Open Source In-Memory Data Store
+# -----------------------------------------
+  redis:
+    image: redis:alpine
+    container_name: librenms_redis
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - CHANGE-TO-DIRECTORY-YOU-WANT/data/redis:/data
+    networks:
+      - internal
+    restart: unless-stopped
+# -----------------------------------------
+# MSMTPD
+# A Minimal SMTP Server
+# -----------------------------------------
+ msmtpd:
+    image: crazymax/msmtpd:latest
+    container_name: librenms_msmtpd
+    env_file:
+      - ./.msmtpd.env
+    networks:
+      - internal
+    restart: unless-stopped
+# -----------------------------------------
+# LIBRENMS
+# Network Monitoring System
+# -----------------------------------------
+  librenms:
+    image: librenms/librenms:latest
+    container_name: librenms
+    hostname: librenms
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    ports:
+      - 8000:8000/tcp
+    depends_on:
+      - db
+      - redis
+      - msmtpd
+    volumes:
+      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+    env_file:
+      - ./.librenms.env
+    environment:
+      - TZ=America/Los_Angeles
+      - PUID=1000
+      - PGID=1000
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_TIMEOUT=60
+      - LISTEN_IPV6=FALSE
+    networks:
+      - internal
+    restart: unless-stopped
+#------------------------------------------
+# SYSLOG-NG
+# Open Source Log Management Tool
+# -----------------------------------------
+  syslogng:
+    image: librenms/librenms:latest
+    container_name: librenms_syslogng
+    hostname: librenms-syslogng
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - librenms
+      - redis
+    ports:
+      - 514:514/udp
+      - 514:514/tcp
+    volumes:
+      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+    env_file:
+      - ./.librenms.env
+    environment:
+      - TZ=America/Los_Angeles
+      - PUID=1000
+      - PGID=1000
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_TIMEOUT=60
+      - SIDECAR_SYSLOGNG=1
+    networks:
+      - internal
+    restart: unless-stopped
+#------------------------------------------
+# SNMPTRAPD
+# Receive and Log SNMP Trap Messages
+# -----------------------------------------
+  snmptrapd:
+    image: librenms/librenms:latest
+    container_name: librenms_snmptrapd
+    hostname: librenms-snmptrapd
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - librenms
+      - redis
+    ports:
+      - 162:162/udp
+      - 162:162/tcp
+    volumes:
+      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+    env_file:
+      - ./.librenms.env
+    environment:
+      - TZ=America/Los_Angeles
+      - PUID=1000
+      - PGID=1000
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_TIMEOUT=60
+      - SIDECAR_SNMPTRAPD=1
+    networks:
+      - internal
+    restart: always
+#------------------------------------------
+# LIBRENMS DISPATCHER
+# Poller Service
+# -----------------------------------------
+  dispatcher:
+    image: librenms/librenms:latest
+    container_name: librenms_dispatcher
+    hostname: librenms-dispatcher
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - librenms
+      - redis
+    volumes:
+      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+    env_file:
+      - ./.librenms.env
+    environment:
+      - TZ=America/Los_Angeles
+      - PUID=1000
+      - PGID=1000
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_TIMEOUT=60
+      - DISPATCHER_NODE_ID=dispatcher1
+      - SIDECAR_DISPATCHER=1
+    networks:
+      - internal
+    restart: unless-stopped
+# -----------------------------------------
+# DOCKER CONFIGURATION
+# Network
+# -----------------------------------------
+networks:
+  internal:
+    name: librenms
+    external: true
