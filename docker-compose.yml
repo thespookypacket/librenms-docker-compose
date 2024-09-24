@@ -13,7 +13,7 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     volumes:
-      - CHANGE-TO-DIRECTORY-YOU-WANT/data/db:/var/lib/mysql
+      - /opt/docker/data/db:/var/lib/mysql
     environment:
       - TZ=America/Los_Angeles
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
@@ -33,7 +33,7 @@ services:
     environment:
       - TZ=America/Los_Angeles
     volumes:
-      - CHANGE-TO-DIRECTORY-YOU-WANT/data/redis:/data
+      - /opt/docker/data/redis:/data
     networks:
       - internal
     restart: unless-stopped
@@ -67,7 +67,7 @@ services:
       - redis
       - msmtpd
     volumes:
-      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+      - /opt/docker/data:/data
     env_file:
       - ./.librenms.env
     environment:
@@ -101,7 +101,7 @@ services:
       - 514:514/udp
       - 514:514/tcp
     volumes:
-      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+      - /opt/docker/syslogng/data:/data
     env_file:
       - ./.librenms.env
     environment:
@@ -135,7 +135,7 @@ services:
       - 162:162/udp
       - 162:162/tcp
     volumes:
-      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+      - /opt/docker/data:/data
     env_file:
       - ./.librenms.env
     environment:
@@ -166,7 +166,7 @@ services:
       - librenms
       - redis
     volumes:
-      - CHANGE-TO-DIRECTORY-YOU-WANT/data:/data
+      - /opt/docker/data:/data
     env_file:
       - ./.librenms.env
     environment:
