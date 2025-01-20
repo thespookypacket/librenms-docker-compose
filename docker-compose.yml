@@ -106,6 +106,8 @@ services:
       - 514:514/tcp
     volumes:
       - /opt/docker/syslogng/data:/data
+      - "./librenmsdockercron.sh:/opt/librenms/cronscript.sh"
+      - "./import-cron.sh:/etc/cont-init.d/09-import-cron.sh"
     env_file:
       - ./.librenms.env
     environment:
