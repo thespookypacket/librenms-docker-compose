@@ -64,7 +64,7 @@ services:
       - NET_ADMIN
       - NET_RAW
     ports:
-      - 8000:8000/tcp
+      - 80:8000/tcp
     depends_on:
       - db
       - redis
@@ -102,8 +102,8 @@ services:
       - librenms
       - redis
     ports:
-      - 514:514/udp
-      - 514:514/tcp
+      - 5140:514/udp
+      - 5140:514/tcp
     volumes:
       - /opt/docker/syslogng/data:/data
       - "./librenmsdockercron.sh:/opt/librenms/cronscript.sh"
